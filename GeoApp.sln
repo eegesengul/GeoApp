@@ -1,0 +1,63 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36203.30 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoApp.API", "GeoApp.API\GeoApp.API.csproj", "{2E98C1E3-3020-4A24-9E92-0DB7C26FA1E9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{711F6038-784B-48DE-8892-04DFFF04F492} = {711F6038-784B-48DE-8892-04DFFF04F492}
+		{B577FF49-314D-40C2-99D6-38796BB700C6} = {B577FF49-314D-40C2-99D6-38796BB700C6}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoApp.Application", "GeoApp.Application\GeoApp.Application.csproj", "{B577FF49-314D-40C2-99D6-38796BB700C6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{97C394E4-6429-4D53-BC96-92AA835C84FC} = {97C394E4-6429-4D53-BC96-92AA835C84FC}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoApp.Domain", "GeoApp.Domain\GeoApp.Domain.csproj", "{97C394E4-6429-4D53-BC96-92AA835C84FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoApp.Infrastructure", "GeoApp.Infrastructure\GeoApp.Infrastructure.csproj", "{711F6038-784B-48DE-8892-04DFFF04F492}"
+	ProjectSection(ProjectDependencies) = postProject
+		{97C394E4-6429-4D53-BC96-92AA835C84FC} = {97C394E4-6429-4D53-BC96-92AA835C84FC}
+		{BE703F46-65AC-40C9-90FF-D88B81A2DCC0} = {BE703F46-65AC-40C9-90FF-D88B81A2DCC0}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoApp.Persistence", "GeoApp.Persistence\GeoApp.Persistence.csproj", "{BE703F46-65AC-40C9-90FF-D88B81A2DCC0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{97C394E4-6429-4D53-BC96-92AA835C84FC} = {97C394E4-6429-4D53-BC96-92AA835C84FC}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E98C1E3-3020-4A24-9E92-0DB7C26FA1E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E98C1E3-3020-4A24-9E92-0DB7C26FA1E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E98C1E3-3020-4A24-9E92-0DB7C26FA1E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E98C1E3-3020-4A24-9E92-0DB7C26FA1E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B577FF49-314D-40C2-99D6-38796BB700C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B577FF49-314D-40C2-99D6-38796BB700C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B577FF49-314D-40C2-99D6-38796BB700C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B577FF49-314D-40C2-99D6-38796BB700C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97C394E4-6429-4D53-BC96-92AA835C84FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97C394E4-6429-4D53-BC96-92AA835C84FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97C394E4-6429-4D53-BC96-92AA835C84FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97C394E4-6429-4D53-BC96-92AA835C84FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{711F6038-784B-48DE-8892-04DFFF04F492}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{711F6038-784B-48DE-8892-04DFFF04F492}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{711F6038-784B-48DE-8892-04DFFF04F492}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{711F6038-784B-48DE-8892-04DFFF04F492}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE703F46-65AC-40C9-90FF-D88B81A2DCC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE703F46-65AC-40C9-90FF-D88B81A2DCC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE703F46-65AC-40C9-90FF-D88B81A2DCC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE703F46-65AC-40C9-90FF-D88B81A2DCC0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {878A6C4F-485E-4174-ACA5-0ACF1FC5C430}
+	EndGlobalSection
+EndGlobal
