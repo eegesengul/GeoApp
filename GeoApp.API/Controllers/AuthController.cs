@@ -2,7 +2,6 @@
 using GeoApp.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 
-
 namespace GeoApp.API.Controllers
 {
     [Route("api/[controller]")]
@@ -19,21 +18,35 @@ namespace GeoApp.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            var token = await _authService.RegisterAsync(dto);
-            if (token == null)
-                return BadRequest("Kayıt başarısız.");
+            try
+            {
+                var token = await _authService.RegisterAsync(dto);
+                if (token == null)
+                    return BadRequest(new { message = "Kayıt başarısız. Kullanıcı zaten var olabilir." });
 
-            return Ok(new { token });
+                return Ok(new { token });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Sunucu hatası", error = ex.Message });
+            }
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var token = await _authService.LoginAsync(dto);
-            if (token == null)
-                return Unauthorized("Giriş başarısız.");
+            try
+            {
+                var token = await _authService.LoginAsync(dto);
+                if (token == null)
+                    return Unauthorized(new { message = "Geçersiz e-posta veya şifre." });
 
-            return Ok(new { token });
+                return Ok(new { token });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Sunucu hatası", error = ex.Message });
+            }
         }
     }
 }

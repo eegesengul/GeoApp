@@ -1,11 +1,9 @@
-﻿using GeoApp.API.Dtos;
-using GeoApp.Domain.Entities;
-using GeoApp.Infrastructure.Persistence;
+﻿using GeoApp.Application.Features.Areas.Commands;
+using GeoApp.Application.Features.Areas.Queries;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
-using NetTopologySuite.IO;
 
 namespace GeoApp.API.Controllers
 {
@@ -13,19 +11,20 @@ namespace GeoApp.API.Controllers
     [ApiController]
     public class AreasController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IMediator _mediator;
 
-        public AreasController(ApplicationDbContext context)
+        public AreasController(IMediator mediator)
         {
-            _context = context;
+            _mediator = mediator;
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAll()
         {
-            var areas = await _context.Areas.ToListAsync();
+            var result = await _mediator.Send(new GetAllAreasQuery());
 
-            var features = areas.Select(area => new
+            var features = result.Select(area => new
             {
                 type = "Feature",
                 geometry = new
@@ -54,100 +53,66 @@ namespace GeoApp.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateAreaDto dto)
+        [Authorize]
+        public async Task<IActionResult> Create([FromBody] CreateAreaCommand command)
         {
-            var reader = new WKTReader();
-            Geometry geometry;
-
-            try
-            {
-                geometry = reader.Read(dto.WKTGeometry);
-            }
-            catch
-            {
-                return BadRequest("Geçersiz WKT geometrisi.");
-            }
-
-            var area = new Area
-            {
-                Id = Guid.NewGuid(),
-                Name = dto.Name,
-                Description = dto.Description,
-                Geometry = geometry
-            };
-
-            _context.Areas.Add(area);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetAll), new { id = area.Id }, new
-            {
-                area.Id,
-                area.Name,
-                area.Description
-            });
-        }
-
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            var area = await _context.Areas.FindAsync(id);
-            if (area == null)
-            {
-                return NotFound();
-            }
-
-            _context.Areas.Remove(area);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            var id = await _mediator.Send(command);
+            return CreatedAtAction(nameof(GetAll), new { id }, new { id });
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] CreateAreaDto dto)
+        [Authorize]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateAreaCommand command)
         {
-            var area = await _context.Areas.FindAsync(id);
-            if (area == null)
-            {
-                return NotFound();
-            }
+            if (id != command.Id)
+                return BadRequest("ID uyumsuzluğu");
 
-            var reader = new WKTReader();
-            Geometry geometry;
-
-            try
-            {
-                geometry = reader.Read(dto.WKTGeometry);
-            }
-            catch
-            {
-                return BadRequest("Geçersiz geometri.");
-            }
-
-            area.Name = dto.Name;
-            area.Description = dto.Description;
-            area.Geometry = geometry;
-
-            await _context.SaveChangesAsync();
-
+            await _mediator.Send(command);
             return NoContent();
         }
 
-        //  Giriş yapmış her kullanıcı erişebilir
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            await _mediator.Send(new DeleteAreaCommand { Id = id });
+            return NoContent();
+        }
+
         [Authorize]
         [HttpGet("secure")]
         public IActionResult SecureTest()
         {
-            return Ok("✅ Token geçerli. Giriş yapmış kullanıcı burayı görebilir.");
+            return Ok("Token geçerli. Giriş yapmış kullanıcı burayı görebilir.");
         }
 
-        //  Yalnızca ADMIN rolündeki kullanıcılar erişebilir
         [Authorize(Roles = "ADMIN")]
         [HttpGet("admin-only")]
         public IActionResult AdminTest()
         {
-            return Ok("🔐 Bu endpoint sadece ADMIN rolündeki kullanıcılar içindir.");
+            return Ok("Bu endpoint sadece ADMIN rolündeki kullanıcılar içindir.");
         }
+
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var area = await _mediator.Send(new GetAreaByIdQuery(id));
+            return Ok(area);
+        }
+
+        [Authorize]
+        [HttpGet("by-coordinate")]
+        public async Task<IActionResult> GetByCoordinate([FromQuery] double latitude, [FromQuery] double longitude)
+        {
+            var result = await _mediator.Send(new GetAreaByCoordinateQuery(latitude, longitude));
+
+            if (result == null)
+                return NotFound("Bu koordinatla eşleşen bir alan bulunamadı.");
+
+            return Ok(result);
+        }
+
+
     }
 }

@@ -1,15 +1,20 @@
 using AutoMapper;
+using GeoApp.Application.Features.Areas.Commands;
+using GeoApp.Application.Features.Areas.Handlers;
+using GeoApp.Application.Interfaces; // Interface burada tanýmlý
 using GeoApp.Application.Mappings;
 using GeoApp.Infrastructure.Entities;
 using GeoApp.Infrastructure.Mappings;
 using GeoApp.Infrastructure.Persistence;
 using GeoApp.Infrastructure.Services;
 using GeoApp.Infrastructure.Settings;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +24,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         o => o.UseNetTopologySuite()));
+
+// ApplicationDbContext -> IApplicationDbContext binding
+builder.Services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
 
 // Identity - AppUser kullanýlmalý!
 builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
@@ -35,9 +43,13 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
 builder.Services.Configure<JWTSettings>(builder.Configuration.GetSection("JWT"));
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // JWT ayarlarýný al
-var jwtSettings = builder.Configuration.GetSection("JWT").Get<JWTSettings>();
+var jwtSettings = builder.Configuration.GetSection("JWT").Get<JWTSettings>()
+    ?? throw new InvalidOperationException("JWT ayarlarý yüklenemedi.");
+
 var key = Encoding.UTF8.GetBytes(jwtSettings.Secret);
 
 // JWT middleware
@@ -68,6 +80,12 @@ builder.Services.AddAutoMapper(
     typeof(AppUserMappingProfile).Assembly
 );
 
+// MediatR
+builder.Services.AddMediatR(Assembly.GetExecutingAssembly());
+builder.Services.AddMediatR(typeof(CreateAreaCommandHandler).Assembly);
+builder.Services.AddMediatR(typeof(GetAllAreasQueryHandler).Assembly);
+
+
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -85,7 +103,6 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "GeoApp API", Version = "v1" });
 
-    // JWT Support
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -134,7 +151,6 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    //  Admin kullanýcý oluþturma
     var adminEmail = "admin@admin.com";
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
@@ -151,11 +167,11 @@ using (var scope = app.Services.CreateScope())
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(newAdmin, "ADMIN");
-            Console.WriteLine(" Admin kullanýcýsý baþarýyla oluþturuldu.");
+            Console.WriteLine("Admin kullanýcýsý baþarýyla oluþturuldu.");
         }
         else
         {
-            Console.WriteLine(" Admin oluþturulamadý: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+            Console.WriteLine("Admin oluþturulamadý: " + string.Join(", ", result.Errors.Select(e => e.Description)));
         }
     }
 }
