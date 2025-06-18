@@ -1,11 +1,10 @@
 ﻿using GeoApp.API.Dtos;
-using GeoApp.Persistence.Context;
-using Microsoft.AspNetCore.Http;
+using GeoApp.Domain.Entities;
+using GeoApp.Infrastructure.Persistence; // ✅ Doğru namespace
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NetTopologySuite.IO;
 using NetTopologySuite.Geometries;
-using GeoApp.Domain.Entities;
+using NetTopologySuite.IO;
 
 namespace GeoApp.API.Controllers
 {
@@ -33,8 +32,8 @@ namespace GeoApp.API.Controllers
                     type = "Polygon",
                     coordinates = new[]
                     {
-                area.Geometry.Coordinates.Select(c => new[] { c.X, c.Y }).ToArray()
-            }
+                        area.Geometry.Coordinates.Select(c => new[] { c.X, c.Y }).ToArray()
+                    }
                 },
                 properties = new
                 {
@@ -53,22 +52,19 @@ namespace GeoApp.API.Controllers
             return Ok(geoJson);
         }
 
-
-
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateAreaDto dto)
         {
             var reader = new WKTReader();
-            
             Geometry geometry;
-            
+
             try
             {
                 geometry = reader.Read(dto.WKTGeometry);
             }
-            catch (Exception)
+            catch
             {
-                return BadRequest("Gecersiz WKT geometrisi.");
+                return BadRequest("Geçersiz WKT geometrisi.");
             }
 
             var area = new Area
@@ -78,6 +74,7 @@ namespace GeoApp.API.Controllers
                 Description = dto.Description,
                 Geometry = geometry
             };
+
             _context.Areas.Add(area);
             await _context.SaveChangesAsync();
 
@@ -87,9 +84,7 @@ namespace GeoApp.API.Controllers
                 area.Name,
                 area.Description
             });
-
         }
-
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
@@ -103,7 +98,7 @@ namespace GeoApp.API.Controllers
             _context.Areas.Remove(area);
             await _context.SaveChangesAsync();
 
-            return NoContent(); // 204
+            return NoContent();
         }
 
         [HttpPut("{id}")]
@@ -135,6 +130,5 @@ namespace GeoApp.API.Controllers
 
             return NoContent();
         }
-
     }
 }

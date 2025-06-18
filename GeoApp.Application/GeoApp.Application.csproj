@@ -1,7 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GeoApp.Domain\GeoApp.Domain.csproj" />
+    <ProjectReference Include="..\GeoApp.Infrastructure\GeoApp.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

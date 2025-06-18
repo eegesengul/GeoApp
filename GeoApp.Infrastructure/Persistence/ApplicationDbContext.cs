@@ -1,26 +1,24 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using GeoApp.Infrastructure.Entities;
 using GeoApp.Domain.Entities;
-using NetTopologySuite.Geometries;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
+using GeoApp.Infrastructure;
 
-namespace GeoApp.Persistence.Context
+namespace GeoApp.Infrastructure.Persistence
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
 
-        public DbSet<User> Users => Set<User>();
         public DbSet<Area> Areas => Set<Area>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
+            base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<Area>()
                 .Property(a => a.Geometry)
                 .HasColumnType("geometry");
