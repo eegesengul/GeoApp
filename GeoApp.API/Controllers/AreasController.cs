@@ -1,6 +1,7 @@
 ﻿using GeoApp.API.Dtos;
 using GeoApp.Domain.Entities;
-using GeoApp.Infrastructure.Persistence; // ✅ Doğru namespace
+using GeoApp.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
@@ -87,6 +88,7 @@ namespace GeoApp.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var area = await _context.Areas.FindAsync(id);
@@ -102,6 +104,7 @@ namespace GeoApp.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> Update(Guid id, [FromBody] CreateAreaDto dto)
         {
             var area = await _context.Areas.FindAsync(id);
@@ -129,6 +132,22 @@ namespace GeoApp.API.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        //  Giriş yapmış her kullanıcı erişebilir
+        [Authorize]
+        [HttpGet("secure")]
+        public IActionResult SecureTest()
+        {
+            return Ok("✅ Token geçerli. Giriş yapmış kullanıcı burayı görebilir.");
+        }
+
+        //  Yalnızca ADMIN rolündeki kullanıcılar erişebilir
+        [Authorize(Roles = "ADMIN")]
+        [HttpGet("admin-only")]
+        public IActionResult AdminTest()
+        {
+            return Ok("🔐 Bu endpoint sadece ADMIN rolündeki kullanıcılar içindir.");
         }
     }
 }

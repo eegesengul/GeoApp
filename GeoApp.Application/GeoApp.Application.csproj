@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GeoApp.Domain\GeoApp.Domain.csproj" />
-    <ProjectReference Include="..\GeoApp.Infrastructure\GeoApp.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
