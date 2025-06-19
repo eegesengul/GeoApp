@@ -76,8 +76,9 @@ builder.Services.AddAuthentication(options =>
 
 // AutoMapper
 builder.Services.AddAutoMapper(
-    typeof(UserMappingProfile).Assembly,
-    typeof(AppUserMappingProfile).Assembly
+    typeof(GeoApp.Application.Mappings.UserMappingProfile).Assembly,
+    typeof(GeoApp.Application.Mappings.AreaMappingProfile).Assembly,
+    typeof(GeoApp.Infrastructure.Mappings.AppUserMappingProfile).Assembly
 );
 
 // MediatR

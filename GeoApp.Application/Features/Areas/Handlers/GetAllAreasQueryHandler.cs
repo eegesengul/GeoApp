@@ -1,4 +1,6 @@
-﻿using GeoApp.Application.Features.Areas.Queries;
+﻿using AutoMapper;
+using GeoApp.Application.Dtos;
+using GeoApp.Application.Features.Areas.Queries;
 using GeoApp.Application.Interfaces;
 using GeoApp.Domain.Entities;
 using MediatR;
@@ -10,11 +12,13 @@ namespace GeoApp.Application.Features.Areas.Handlers
     {
         private readonly IApplicationDbContext _context;
         private readonly ICurrentUserService _currentUser;
+        private readonly IMapper _mapper;
 
-        public GetAllAreasQueryHandler(IApplicationDbContext context, ICurrentUserService currentUser)
+        public GetAllAreasQueryHandler(IApplicationDbContext context, ICurrentUserService currentUser, IMapper mapper)
         {
             _context = context;
             _currentUser = currentUser;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<AreaDto>> Handle(GetAllAreasQuery request, CancellationToken cancellationToken)
@@ -29,13 +33,7 @@ namespace GeoApp.Application.Features.Areas.Handlers
 
             var areas = await query.ToListAsync(cancellationToken);
 
-            return areas.Select(area => new AreaDto
-            {
-                Id = area.Id,
-                Name = area.Name,
-                Description = area.Description,
-                Geometry = area.Geometry
-            });
+            return _mapper.Map<IEnumerable<AreaDto>>(areas);
         }
     }
 }

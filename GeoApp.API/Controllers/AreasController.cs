@@ -1,4 +1,5 @@
-﻿using GeoApp.Application.Features.Areas.Commands;
+﻿using GeoApp.API.Helpers;
+using GeoApp.Application.Features.Areas.Commands;
 using GeoApp.Application.Features.Areas.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -23,33 +24,7 @@ namespace GeoApp.API.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _mediator.Send(new GetAllAreasQuery());
-
-            var features = result.Select(area => new
-            {
-                type = "Feature",
-                geometry = new
-                {
-                    type = "Polygon",
-                    coordinates = new[]
-                    {
-                        area.Geometry.Coordinates.Select(c => new[] { c.X, c.Y }).ToArray()
-                    }
-                },
-                properties = new
-                {
-                    area.Id,
-                    area.Name,
-                    area.Description
-                }
-            });
-
-            var geoJson = new
-            {
-                type = "FeatureCollection",
-                features = features
-            };
-
-            return Ok(geoJson);
+            return Ok(GeoJsonHelper.ToGeoJson(result));
         }
 
         [HttpPost]
@@ -98,7 +73,7 @@ namespace GeoApp.API.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var area = await _mediator.Send(new GetAreaByIdQuery(id));
-            return Ok(area);
+            return Ok(GeoJsonHelper.ToGeoJson(area));
         }
 
         [Authorize]
@@ -110,9 +85,39 @@ namespace GeoApp.API.Controllers
             if (result == null)
                 return NotFound("Bu koordinatla eşleşen bir alan bulunamadı.");
 
-            return Ok(result);
+            return Ok(GeoJsonHelper.ToGeoJson(result));
         }
 
+        [HttpPost("intersects")]
+        [Authorize]
+        public async Task<IActionResult> GetIntersecting([FromBody] GetIntersectingAreasQuery query)
+        {
+            var result = await _mediator.Send(query);
+                return Ok(GeoJsonHelper.ToGeoJson(result));
+        }
 
+        [HttpPost("within")]
+        [Authorize]
+        public async Task<IActionResult> GetWithin([FromBody] GetAreasWithinQuery query)
+        {
+            var result = await _mediator.Send(query);
+            return Ok(GeoJsonHelper.ToGeoJson(result));
+        }
+
+        [HttpGet("{id}/size")]
+        [Authorize]
+        public async Task<IActionResult> GetSize(Guid id)
+        {
+            var size = await _mediator.Send(new GetAreaSizeQuery(id));
+            return Ok(new { size, unit = "metrekare" });
+        }
+
+        [HttpGet("distance")]
+        [Authorize]
+        public async Task<IActionResult> GetDistance([FromQuery] Guid firstAreaId, [FromQuery] Guid secondAreaId)
+        {
+            var distance = await _mediator.Send(new GetDistanceBetweenAreasQuery(firstAreaId, secondAreaId));
+            return Ok(new { distance, unit = "metre" });
+        }
     }
 }

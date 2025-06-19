@@ -1,4 +1,4 @@
-﻿using GeoApp.Application.Features.Areas.Queries;
+﻿using GeoApp.Application.Dtos;
 using MediatR;
 using System;
 
