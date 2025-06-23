@@ -4,6 +4,7 @@ using GeoApp.Domain.Entities;
 using MediatR;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
+using System.Text.Json;
 
 namespace GeoApp.Application.Features.Areas.Handlers
 {
@@ -21,14 +22,19 @@ namespace GeoApp.Application.Features.Areas.Handlers
         public async Task<Guid> Handle(CreateAreaCommand request, CancellationToken cancellationToken)
         {
             Geometry geometry;
+            var reader = new GeoJsonReader();
 
             try
             {
-                geometry = new WKTReader().Read(request.WKTGeometry);
+                using (var jsonDoc = JsonDocument.Parse(request.GeoJsonGeometry))
+                {
+                    var geometryNode = jsonDoc.RootElement.GetProperty("geometry").ToString();
+                    geometry = reader.Read<Geometry>(geometryNode);
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                throw new Exception("Geçersiz WKT geometrisi.");
+                throw new Exception($"Geçersiz GeoJSON geometrisi. Hata: {ex.Message}");
             }
 
             var area = new Area
