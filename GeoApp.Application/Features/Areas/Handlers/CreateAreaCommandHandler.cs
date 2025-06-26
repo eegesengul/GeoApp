@@ -21,20 +21,36 @@ namespace GeoApp.Application.Features.Areas.Handlers
 
         public async Task<Guid> Handle(CreateAreaCommand request, CancellationToken cancellationToken)
         {
+            // Gelen GeoJSON verisinin boş olup olmadığını kontrol et
+            if (string.IsNullOrWhiteSpace(request.GeoJsonGeometry))
+            {
+                throw new ArgumentException("GeoJSON geometry cannot be null or empty.", nameof(request.GeoJsonGeometry));
+            }
+
             Geometry geometry;
             var reader = new GeoJsonReader();
 
             try
             {
+                // Gelen veri bir GeoJSON Feature ise, içinden 'geometry' kısmını al
                 using (var jsonDoc = JsonDocument.Parse(request.GeoJsonGeometry))
                 {
-                    var geometryNode = jsonDoc.RootElement.GetProperty("geometry").ToString();
-                    geometry = reader.Read<Geometry>(geometryNode);
+                    if (jsonDoc.RootElement.TryGetProperty("geometry", out var geometryElement))
+                    {
+                        var geometryNode = geometryElement.ToString();
+                        geometry = reader.Read<Geometry>(geometryNode);
+                    }
+                    else
+                    {
+                        // Eğer 'geometry' propertysi yoksa, gelen verinin kendisinin bir geometri olduğunu varsay
+                        geometry = reader.Read<Geometry>(request.GeoJsonGeometry);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Geçersiz GeoJSON geometrisi. Hata: {ex.Message}");
+                // Orijinal hatayı kaybetmeden yeni bir hata fırlat
+                throw new Exception($"Invalid GeoJSON geometry. Details: {ex.Message}", ex);
             }
 
             var area = new Area
