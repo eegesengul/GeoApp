@@ -1,7 +1,7 @@
 using AutoMapper;
 using GeoApp.Application.Features.Areas.Commands;
 using GeoApp.Application.Features.Areas.Handlers;
-using GeoApp.Application.Interfaces; // Interface burada tanýmlý
+using GeoApp.Application.Interfaces;
 using GeoApp.Application.Mappings;
 using GeoApp.Infrastructure.Entities;
 using GeoApp.Infrastructure.Mappings;
@@ -16,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization; // <-- 1. YENÝ EKLENEN USING
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,10 +82,10 @@ builder.Services.AddAutoMapper(
     typeof(GeoApp.Infrastructure.Mappings.AppUserMappingProfile).Assembly
 );
 
-// MediatR
-builder.Services.AddMediatR(Assembly.GetExecutingAssembly());
+// MediatR - 2. DÜZENLENEN KISIM
+// Bu tek satýr, GeoApp.Application projesindeki TÜM handler'larý (Area, Point vb.)
+// otomatik olarak bulur ve kaydeder. Daha temiz ve geleceðe dönük bir yaklaþýmdýr.
 builder.Services.AddMediatR(typeof(CreateAreaCommandHandler).Assembly);
-builder.Services.AddMediatR(typeof(GetAllAreasQueryHandler).Assembly);
 
 
 // CORS
@@ -130,7 +131,14 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddControllers();
+// Controllers - 3. GÜNCELLENEN KISIM
+// AddControllers() metoduna AddJsonOptions ekleyerek 500 hatasýný çözüyoruz.
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    // JSON'a çevirme sýrasýnda "Infinity" gibi özel sayý deðerlerine izin verir.
+    options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
+});
+
 
 var app = builder.Build();
 
