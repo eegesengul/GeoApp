@@ -16,7 +16,9 @@ namespace GeoApp.Infrastructure.Persistence
             : base(options) { }
 
         public DbSet<Area> Areas => Set<Area>();
-        public DbSet<Point> Points => Set<Point>(); // Point için DbSet eklendi
+        public DbSet<Point> Points => Set<Point>();
+
+        // IdentityDbContext zaten Users DbSet'ini içeriyor, tekrar eklemeye gerek yok.
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -32,7 +34,6 @@ namespace GeoApp.Infrastructure.Persistence
                 .HasColumnType("geometry")
                 .HasAnnotation("Relational:SRID", 4326);
 
-            // Point için geometri konfigürasyonu eklendi
             modelBuilder.Entity<Point>()
                 .Property(p => p.Geometry)
                 .HasColumnType("geometry")

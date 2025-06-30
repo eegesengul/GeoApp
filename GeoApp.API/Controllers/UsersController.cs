@@ -4,12 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using GeoApp.Application.Features.Users.Commands;
 using GeoApp.Application.Features.Users.Queries;
 
-
 namespace Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "ADMIN")]
     public class UsersController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -18,7 +16,8 @@ namespace Api.Controllers
             _mediator = mediator;
         }
 
-        // GET: api/Users
+        // ADMIN işlemleri (tüm kullanıcılar üzerinde işlem yapma)
+        [Authorize(Roles = "ADMIN")]
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
@@ -26,7 +25,7 @@ namespace Api.Controllers
             return Ok(result);
         }
 
-        // PUT: api/Users/{id}
+        [Authorize(Roles = "ADMIN")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserCommand command)
         {
@@ -38,12 +37,44 @@ namespace Api.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Users/{id}
+        [Authorize(Roles = "ADMIN")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             var deleted = await _mediator.Send(new DeleteUserCommand { Id = id });
             if (!deleted)
+                return NotFound();
+            return NoContent();
+        }
+
+        // Giriş yapmış HER KULLANICI için kendi bilgileri (profil)
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMe()
+        {
+            // Doğru claimden al
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var user = await _mediator.Send(new GetMyUserQuery { UserId = userId });
+            if (user == null)
+                return NotFound();
+            return Ok(user);
+        }
+
+        [Authorize]
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateMe([FromBody] UpdateUserCommand command)
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+            if (userId != command.Id)
+                return Forbid();
+
+            var updated = await _mediator.Send(command);
+            if (!updated)
                 return NotFound();
             return NoContent();
         }

@@ -25,10 +25,14 @@ namespace GeoApp.Infrastructure.Features.Users.Handlers
             user.UserName = request.Username;
             user.Email = request.Email;
 
-            var roles = await _userManager.GetRolesAsync(user);
-            if (roles.Any())
-                await _userManager.RemoveFromRolesAsync(user, roles);
-            await _userManager.AddToRoleAsync(user, request.Role);
+            // Sadece request.Role boş değilse rol işlemleri yap
+            if (!string.IsNullOrWhiteSpace(request.Role))
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                if (roles.Any())
+                    await _userManager.RemoveFromRolesAsync(user, roles);
+                await _userManager.AddToRoleAsync(user, request.Role);
+            }
 
             var result = await _userManager.UpdateAsync(user);
             return result.Succeeded;
