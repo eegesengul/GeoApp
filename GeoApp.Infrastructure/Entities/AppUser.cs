@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
-using GeoApp.Infrastructure.Entities;
-using GeoApp.Domain.Entities;
 
 namespace GeoApp.Infrastructure.Entities
 {

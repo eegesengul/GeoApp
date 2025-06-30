@@ -1,9 +1,10 @@
 using AutoMapper;
-using GeoApp.Application.Features.Areas.Commands;
 using GeoApp.Application.Features.Areas.Handlers;
+using GeoApp.Application.Features.Points.Handlers;
+using GeoApp.Infrastructure.Features.Users.Handlers;
 using GeoApp.Application.Interfaces;
 using GeoApp.Application.Mappings;
-using GeoApp.Infrastructure.Entities;
+using GeoApp.Infrastructure.Entities;   
 using GeoApp.Infrastructure.Mappings;
 using GeoApp.Infrastructure.Persistence;
 using GeoApp.Infrastructure.Services;
@@ -16,7 +17,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
-using System.Text.Json.Serialization; // <-- 1. YENÝ EKLENEN USING
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,16 +78,20 @@ builder.Services.AddAuthentication(options =>
 
 // AutoMapper
 builder.Services.AddAutoMapper(
-    typeof(GeoApp.Application.Mappings.UserMappingProfile).Assembly,
-    typeof(GeoApp.Application.Mappings.AreaMappingProfile).Assembly,
-    typeof(GeoApp.Infrastructure.Mappings.AppUserMappingProfile).Assembly
+    typeof(UserMappingProfile).Assembly,
+    typeof(AreaMappingProfile).Assembly,
+    typeof(AppUserMappingProfile).Assembly
 );
 
-// MediatR - 2. DÜZENLENEN KISIM
-// Bu tek satýr, GeoApp.Application projesindeki TÜM handler'larý (Area, Point vb.)
-// otomatik olarak bulur ve kaydeder. Daha temiz ve geleceðe dönük bir yaklaþýmdýr.
-builder.Services.AddMediatR(typeof(CreateAreaCommandHandler).Assembly);
-
+// MediatR
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssemblies(
+        typeof(CreateAreaCommandHandler).Assembly,                     // Areas
+        typeof(CreatePointCommandHandler).Assembly,                    // Points
+        typeof(GetUsersQueryHandler).Assembly                          // Users
+    );
+});
 
 // CORS
 builder.Services.AddCors(options =>
@@ -131,24 +136,22 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Controllers - 3. GÜNCELLENEN KISIM
-// AddControllers() metoduna AddJsonOptions ekleyerek 500 hatasýný çözüyoruz.
+// Controllers - JSON options
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    // JSON'a çevirme sýrasýnda "Infinity" gibi özel sayý deðerlerine izin verir.
     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
 });
-
 
 var app = builder.Build();
 
 // Rol ve admin kullanýcý seedleme
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
+await SeedRolesAndAdminUserAsync(app.Services);
 
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-    var userManager = services.GetRequiredService<UserManager<AppUser>>();
+static async Task SeedRolesAndAdminUserAsync(IServiceProvider services)
+{
+    using var scope = services.CreateScope();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
 
     string[] roles = new[] { "USER", "ADMIN" };
 
