@@ -19,9 +19,9 @@ namespace Api.Controllers
         // ADMIN işlemleri (tüm kullanıcılar üzerinde işlem yapma)
         [Authorize(Roles = "ADMIN")]
         [HttpGet]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            var result = await _mediator.Send(new GetUsersQuery());
+            var result = await _mediator.Send(new GetUsersQuery { Page = page, PageSize = pageSize });
             return Ok(result);
         }
 

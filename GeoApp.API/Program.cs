@@ -4,7 +4,7 @@ using GeoApp.Application.Features.Points.Handlers;
 using GeoApp.Infrastructure.Features.Users.Handlers;
 using GeoApp.Application.Interfaces;
 using GeoApp.Application.Mappings;
-using GeoApp.Infrastructure.Entities;   
+using GeoApp.Infrastructure.Entities;
 using GeoApp.Infrastructure.Mappings;
 using GeoApp.Infrastructure.Persistence;
 using GeoApp.Infrastructure.Services;
@@ -18,6 +18,9 @@ using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using GeoApp.Application.Features.Auth.Handlers;
+using GeoApp.Application.Interfaces; // YENÝ
+using GeoApp.Infrastructure.Services; // YENÝ
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,10 +36,20 @@ builder.Services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
 // Identity - AppUser kullanýlmalý!
 builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
 {
-    options.Password.RequireDigit = false;
-    options.Password.RequiredLength = 6;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = false;
+    // Güçlü þifre politikasý
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+
+    // Oturum kilitleme (brute force saldýrýlarýna karþý)
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // Kullanýcý ayarlarý
+    options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -44,9 +57,12 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
 // JWT Settings + Token Service
 builder.Services.Configure<JWTSettings>(builder.Configuration.GetSection("JWT"));
 builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddHttpContextAccessor();
+
+// GÜNCELLENDÝ - Mimariye uygun servis kaydý
+builder.Services.AddScoped<IIdentityService, IdentityService>();
+
 
 // JWT ayarlarýný al
 var jwtSettings = builder.Configuration.GetSection("JWT").Get<JWTSettings>()
@@ -87,9 +103,10 @@ builder.Services.AddAutoMapper(
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssemblies(
-        typeof(CreateAreaCommandHandler).Assembly,                     // Areas
-        typeof(CreatePointCommandHandler).Assembly,                    // Points
-        typeof(GetUsersQueryHandler).Assembly                          // Users
+        typeof(CreateAreaCommandHandler).Assembly,       // Areas
+        typeof(CreatePointCommandHandler).Assembly,      // Points
+        typeof(GetUsersQueryHandler).Assembly,           // Users
+        typeof(RegisterUserCommandHandler).Assembly      // Auth
     );
 });
 
@@ -172,9 +189,10 @@ static async Task SeedRolesAndAdminUserAsync(IServiceProvider services)
         {
             UserName = "admin",
             Email = adminEmail
+            // FullName alaný AppUser'da varsa burada da set edilebilir.
         };
 
-        var result = await userManager.CreateAsync(newAdmin, "ege123ege");
+        var result = await userManager.CreateAsync(newAdmin, "Admin123!");
 
         if (result.Succeeded)
         {

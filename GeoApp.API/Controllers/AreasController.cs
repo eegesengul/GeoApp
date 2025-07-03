@@ -19,7 +19,7 @@ namespace GeoApp.API.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet]
+        [HttpGet] 
         [Authorize]
         public async Task<IActionResult> GetAll()
         {
