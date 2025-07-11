@@ -34,6 +34,15 @@ namespace GeoApp.Infrastructure.Features.Users.Handlers
                 await _userManager.AddToRoleAsync(user, request.Role);
             }
 
+            // Şifre güncelleme
+            if (!string.IsNullOrWhiteSpace(request.Password))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var passResult = await _userManager.ResetPasswordAsync(user, token, request.Password);
+                if (!passResult.Succeeded)
+                    return false;
+            }
+
             var result = await _userManager.UpdateAsync(user);
             return result.Succeeded;
         }

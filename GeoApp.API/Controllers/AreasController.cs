@@ -112,7 +112,7 @@ namespace GeoApp.API.Controllers
             return Ok(new { size, unit = "metrekare" });
         }
 
-        [HttpGet("distance")]
+        [HttpGet("distance")]   
         [Authorize]
         public async Task<IActionResult> GetDistance([FromQuery] Guid firstAreaId, [FromQuery] Guid secondAreaId)
         {
