@@ -31,7 +31,15 @@ namespace GeoApp.Infrastructure.Features.Users.Handlers
                 var roles = await _userManager.GetRolesAsync(user);
                 if (roles.Any())
                     await _userManager.RemoveFromRolesAsync(user, roles);
-                await _userManager.AddToRoleAsync(user, request.Role);
+
+                // ROL BÜYÜK HARFE CULTURE-INVARIANT ÇEVRİLİYOR!
+                var normalizedRole = request.Role.ToUpperInvariant();
+                await _userManager.AddToRoleAsync(user, normalizedRole);
+
+                // İsteğe bağlı: User entity'deki property'i de güncelle
+                var roleProp = user.GetType().GetProperty("Role");
+                if (roleProp != null)
+                    roleProp.SetValue(user, normalizedRole);
             }
 
             // Şifre güncelleme
